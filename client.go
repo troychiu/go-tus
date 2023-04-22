@@ -16,12 +16,12 @@ const (
 // Client represents the tus client.
 // You can use it in goroutines to create parallels uploads.
 type Client struct {
-	Config  *Config
-	Url     string
-	Version string
-	Header  http.Header
-
-	client *http.Client
+	Config   *Config
+	Url      string
+	Version  string
+	Header   http.Header
+	Response *http.Response
+	client   *http.Client
 }
 
 // NewClient creates a new tus client.
@@ -50,6 +50,10 @@ func NewClient(url string, config *Config) (*Client, error) {
 
 		client: config.HttpClient,
 	}, nil
+}
+
+func (c *Client) GetResponse() *http.Response {
+	return c.Response
 }
 
 func (c *Client) Do(req *http.Request) (*http.Response, error) {
@@ -91,6 +95,7 @@ func (c *Client) CreateUpload(u *Upload) (*Uploader, error) {
 
 	switch res.StatusCode {
 	case 201:
+		c.Response = res
 		location := res.Header.Get("Location")
 
 		newURL, err := c.resolveLocationURL(location)
